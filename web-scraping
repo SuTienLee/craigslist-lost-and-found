@@ -1,0 +1,118 @@
+#### web scraping ####
+# Import all the packages needed
+# Install packages "beautifulsoup4" in terminal
+import urllib.request as req
+import requests
+import bs4
+from random import randint
+import re
+from time import sleep
+import pandas as pd
+import numpy as np
+
+
+# Request for the LA lost&found website.
+# Set a random zip code 90036 and 120 miles under the "Miles from location" section.
+url = "https://losangeles.craigslist.org/d/lost-found/search/laf?postal=90036&search_distance=120"
+request = req.Request(url, headers={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+})
+
+# Create empty list to save titles and contents of each post respectively
+pagestitleList = []
+pagescontentList = []
+
+# Loop 1 for the titles in the five pages
+for i in range(0, 5):
+    # Sleep for 10 to 15 seconds after scraping each page
+    sleep(randint(10, 15))
+    url = "https://losangeles.craigslist.org/d/lost-found/search/laf?postal=90036&" + "s=" + str(
+        i * 120) + "&search_distance=120"
+
+    print(url)  # Print out all the urls of each page to make sure we are scraping the correct pages
+    with req.urlopen(url) as response:
+        data = response.read().decode("utf-8")
+    root = bs4.BeautifulSoup(data, "html.parser")
+    titles = root.find_all("h3", class_="result-heading")
+    alltitle = [t.text.replace('\n', '') for t in titles]
+    pagestitleList.extend(alltitle)  # Extend all the titles
+
+    # Loop 2 for the contents
+    for title in titles:
+        link = title.a.get('href')
+        url2 = link
+
+        data2 = requests.get(url2)
+        html = bs4.BeautifulSoup(data2.text, 'html.parser')
+        des = html.find("section", id="postingbody")
+        alldes = des.text.replace('\n\nQR Code Link to This Post\n\n\n', '')
+
+        pagescontentList.append(alldes)  # Append the contents
+
+len(pagestitleList) #Check the length of titles list
+len(pagescontentList)  #Check the length of contents list
+
+pagestitleList
+pagescontentList
+
+# Change into dataframe form
+dict = {"Title":pagestitleList, "Content": pagescontentList}
+df = pd.DataFrame(dict)
+
+# Save to csv file
+scrapy_LA = df.to_csv("Craigslist_LAF_LA.csv")
+print(df.head(5))  #Check the first 5 rows in the file
+
+#----------------------------------------------
+
+# Request for the WL lost&found website.
+# Set a random zip code 47906 and 250 miles under the "Miles from location" section.
+url = "https://tippecanoe.craigslist.org/d/lost-found/search/laf?postal=47906&search_distance=250"
+request = req.Request(url, headers={
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+})
+
+# Create empty list to save titles and contents of each post respectively
+pagestitleList = []
+pagescontentList = []
+
+# Loop 1 for the titles in the five pages
+for i in range(0, 5):
+    # Sleep for 10 to 15 seconds after scraping each page
+    sleep(randint(10, 15))
+    url = "https://tippecanoe.craigslist.org/d/lost-found/search/laf?postal=47906&" + "s=" + str(
+        i * 120) + "&search_distance=250"
+
+    print(url)  # Print out all the urls of each page to make sure we are scraping the correct pages
+    with req.urlopen(url) as response:
+        data = response.read().decode("utf-8")
+    root = bs4.BeautifulSoup(data, "html.parser")
+    titles = root.find_all("h3", class_="result-heading")
+    alltitle = [t.text.replace('\n', '') for t in titles]
+    pagestitleList.extend(alltitle)  # Extend all the titles
+
+    # Loop 2 for the contents
+    for title in titles:
+        link = title.a.get('href')
+        url2 = link
+
+        data2 = requests.get(url2)
+        html = bs4.BeautifulSoup(data2.text, 'html.parser')
+        des = html.find("section", id="postingbody")
+        alldes = des.text.replace('\n\nQR Code Link to This Post\n\n\n', '')
+
+        pagescontentList.append(alldes)  # Append the contents
+
+len(pagestitleList) #Check the length of titles list
+len(pagescontentList)  #Check the length of contents list
+
+pagestitleList
+pagescontentList
+
+# Change into dataframe form
+dict = {"Title":pagestitleList, "Content": pagescontentList}
+df = pd.DataFrame(dict)
+
+# Save to csv file
+scrapy_LA = df.to_csv("Craigslist_LAF_WL.csv")
+print(df.head(5))  #Check the first 5 rows in the file
