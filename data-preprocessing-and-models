@@ -1,0 +1,180 @@
+#### Data Processs ####
+
+import nltk
+import pandas as pd
+import gensim
+import numpy as np
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim.corpora import Dictionary
+import os
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pylab import savefig
+
+# Read file
+# Working directory may be different
+os.chdir("D:/2021 Purdue MSBAIM/Course/MGMT 59000 Analyzing Unstructured Data/Group Project")
+rev=pd.read_csv('lawl.csv', header=None, encoding = "UTF-8")
+
+df_temp = rev.iloc[:,  0:2]
+t1=df_temp.values.tolist()
+
+# Data partition: 7/3
+training_docs = t1[:697]
+testing_docs = t1[697:997]
+
+# Separate X and Label
+training_x = [i[1] for i in training_docs]
+training_x.remove(training_x[194])
+testing_x = [i[1] for i in testing_docs]
+training_c = [i[0] for i in training_docs]
+training_c.remove(training_c[194])
+testing_c = [i[0] for i in testing_docs]
+
+# Transform those reviews into a TFIDF matrix
+t2=[]
+for i in training_x:
+    token_d1 = nltk.word_tokenize(i)
+    token_d4 = [token for token in token_d1 if not token in stopwords.words('english') if token.isalpha()]
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    token_d2 = [lemmatizer.lemmatize(token).lower() for token in token_d4 if token.isalpha()]
+    t2.append(token_d2)
+
+t3=[]
+for i in testing_x:
+    token_d1 = nltk.word_tokenize(i)
+    token_d4 = [token for token in token_d1 if not token in stopwords.words('english') if token.isalpha()]
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    token_d2 = [lemmatizer.lemmatize(token).lower() for token in token_d4 if token.isalpha()]
+    t3.append(token_d2)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Trick: create a dummy tokenizer
+def tk(doc):
+    return doc
+vec = TfidfVectorizer(analyzer='word',tokenizer=tk, preprocessor=tk,token_pattern=None, min_df=5, ngram_range=(1,2), stop_words='english')
+vec.fit(t2)
+training_x = vec.transform(t2)
+testing_x = vec.transform(t3)
+
+#### Build Models ####
+
+### Naïve Bayes model
+from sklearn.naive_bayes import MultinomialNB
+NBmodel = MultinomialNB()
+# training
+NBmodel.fit(training_x, training_c)
+y_pred_NB = NBmodel.predict(testing_x)
+# evaluation1: model accuracy
+from sklearn.metrics import accuracy_score
+acc_NB = accuracy_score(testing_c, y_pred_NB)
+print("Naive Bayes model Accuracy:: {:.2f}%".format(acc_NB*100))
+# evaluation2: confusion matrix
+from sklearn.metrics import confusion_matrix
+cm_NB = confusion_matrix(testing_c, y_pred_NB)
+print('Confusion matrix\n\n', cm_NB)
+print('\nTrue Lost(TL) = ', cm_NB[1,1])
+print('\nTrue Found(TF) = ', cm_NB[0,0])
+print('\nFalse Lost(FL) = ', cm_NB[1,0])
+print('\nFalse Found(FF) = ', cm_NB[0,1])
+# visualize confusion matrix with seaborn heatmap
+cm_NB_matrix = pd.DataFrame(data=cm_NB, columns=['Actual Found:0', 'Actual Lost:1'],
+                                 index=['Predict Found:0', 'Predict Lost:1'])
+plt.clf()
+sns.heatmap(cm_NB_matrix, annot=True, fmt='d', cmap='YlGnBu')
+plt.title("Confusion Matrix_Naïve Bayes", fontsize = 12)
+plt.savefig('Confusion Matrix_Naïve Bayes.png', dpi=400)
+
+### Decision Tree model
+from sklearn.tree import DecisionTreeClassifier
+DTmodel = DecisionTreeClassifier()
+# training
+DTmodel.fit(training_x, training_c)
+y_pred_DT = DTmodel.predict(testing_x)
+# evaluation1: model accuracy
+acc_DT = accuracy_score(testing_c, y_pred_DT)
+print("Decision Tree Model Accuracy: {:.2f}%".format(acc_DT*100))
+# evaluation2: confusion matrix
+from sklearn.metrics import confusion_matrix
+cm_DT = confusion_matrix(testing_c, y_pred_DT)
+print('Confusion matrix\n\n', cm_DT)
+print('\nTrue Lost(TL) = ', cm_DT[1,1])
+print('\nTrue Found(TF) = ', cm_DT[0,0])
+print('\nFalse Lost(FL) = ', cm_DT[1,0])
+print('\nFalse Found(FF) = ', cm_DT[0,1])
+# visualize confusion matrix with seaborn heatmap
+cm_DT_matrix = pd.DataFrame(data=cm_DT, columns=['Actual Found:0', 'Actual Lost:1'],
+                                 index=['Predict Found:0', 'Predict Lost:1'])
+plt.clf()
+sns.heatmap(cm_DT_matrix, annot=True, fmt='d', cmap='YlGnBu')
+plt.title("Confusion Matrix_Decision Tree", fontsize = 12)
+plt.savefig('Confusion Matrix_Decision Tree.png', dpi=400)
+
+### Random Forest model
+from sklearn.ensemble import RandomForestClassifier
+RFmodel = RandomForestClassifier(n_estimators=50, max_depth=3, bootstrap=True, random_state=0)
+# training
+RFmodel.fit(training_x, training_c)
+y_pred_RF = RFmodel.predict(testing_x)
+# evaluation1: model accuracy
+acc_RF = accuracy_score(testing_c, y_pred_RF)
+print("Random Forest Model Accuracy: {:.2f}%".format(acc_RF*100))
+# evaluation2: confusion matrix
+from sklearn.metrics import confusion_matrix
+cm_RF = confusion_matrix(testing_c, y_pred_RF)
+print('Confusion matrix\n\n', cm_RF)
+print('\nTrue Lost(TL) = ', cm_RF[1,1])
+print('\nTrue Found(TF) = ', cm_RF[0,0])
+print('\nFalse Lost(FL) = ', cm_RF[1,0])
+print('\nFalse Found(FF) = ', cm_RF[0,1])
+# visualize confusion matrix with seaborn heatmap
+cm_RF_matrix = pd.DataFrame(data=cm_RF, columns=['Actual Found:0', 'Actual Lost:1'],
+                                 index=['Predict Found:0', 'Predict Lost:1'])
+plt.clf()
+sns.heatmap(cm_RF_matrix, annot=True, fmt='d', cmap='YlGnBu')
+plt.title("Confusion Matrix_Random Forest", fontsize = 12)
+plt.savefig('Confusion Matrix_Random Forest', dpi=400)
+
+### SVM model
+from sklearn.svm import LinearSVC
+SVMmodel = LinearSVC()
+# training
+SVMmodel.fit(training_x, training_c)
+y_pred_SVM = SVMmodel.predict(testing_x)
+# evaluation1: model accuracy
+acc_SVM = accuracy_score(testing_c, y_pred_SVM)
+print("SVM model Accuracy: {:.2f}%".format(acc_SVM*100))
+# evaluation2: confusion matrix
+from sklearn.metrics import confusion_matrix
+cm_SVM = confusion_matrix(testing_c, y_pred_SVM)
+print('Confusion matrix\n\n', cm_SVM)
+print('\nTrue Lost(TL) = ', cm_SVM[1,1])
+print('\nTrue Found(TF) = ', cm_SVM[0,0])
+print('\nFalse Lost(FL) = ', cm_SVM[1,0])
+print('\nFalse Found(FF) = ', cm_SVM[0,1])
+# visualize confusion matrix with seaborn heatmap
+cm_SVM_matrix = pd.DataFrame(data=cm_SVM, columns=['Actual Found:0', 'Actual Lost:1'],
+                                 index=['Predict Found:0', 'Predict Lost:1'])
+plt.clf()
+sns.heatmap(cm_SVM_matrix, annot=True, fmt='d', cmap='YlGnBu')
+plt.title("Confusion Matrix_SVM", fontsize = 12)
+plt.savefig('Confusion Matrix_SVM', dpi=400)
+
+# validation
+# We selected the Naïve Bayes model and SVM model
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test= train_test_split(training_x,training_c,test_size=.3, train_size=0.7,random_state=1)
+x_train, x_val, y_train, y_val= train_test_split(x_train,y_train,test_size=0.25,train_size=0.75, random_state=1)
+
+tr =NBmodel.score(x_train, y_train)
+te=NBmodel.score(x_test, y_test)
+vali = NBmodel.score(x_val, y_val)
+print("Performance of NB model \ntrain set: " ,tr, "\ntest set: ", te, "\nvalidation set: " , vali )
+
+tr2 =SVMmodel.score(x_train, y_train)
+te2=SVMmodel.score(x_test, y_test)
+vali2 = SVMmodel.score(x_val, y_val)
+print("\nPerformance of SVM model \ntrain set: " ,tr2, "\ntest set: ", te2, "\nvalidation set: " , vali2 )
