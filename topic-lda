@@ -1,0 +1,41 @@
+#### Topic LDA ####
+# Read file
+rev=pd.read_csv('lawl.csv', header=None, encoding = "UTF-8")
+file=rev[1].tolist()
+file.remove(file[194])
+
+t1=[]
+for i in file:
+    token_d1 = nltk.word_tokenize(i)
+    token_d4 = [token for token in token_d1 if not token in stopwords.words('english') if token.isalpha()]
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    token_d2 = [lemmatizer.lemmatize(token).lower() for token in token_d4 if token.isalpha()]
+    t1.append(token_d2)
+
+for i in range(995):
+    for j in t1[i]:
+        if j == "found" or j =="missing" or j == "lost" or j == "contact" or j == "please" or j == "info" or j =="show" or j == "home":
+            t1[i].remove(j)
+
+t2=[]
+lemmatizer = nltk.stem.WordNetLemmatizer()
+for i in t1:
+    temp1=[]
+    for word in i:
+        temp1.append((lemmatizer.lemmatize(word).lower()))
+        t2.append(" ".join(temp1))
+
+from sklearn.feature_extraction.text import CountVectorizer
+vectorizer1 = CountVectorizer(ngram_range=(1, 2), min_df=5)
+vectorizer1.fit(t2)
+v2 = vectorizer1.transform(t2)
+
+terms = vectorizer1.get_feature_names()
+
+from sklearn.decomposition import LatentDirichletAllocation
+lda = LatentDirichletAllocation(n_components=3).fit(v2)
+
+
+for topic_idx, topic in enumerate(lda.components_):
+    print("Topic %d:" % (topic_idx))
+    print(" ".join([terms[i] for i in topic.argsort()[:-5-1:-1]]))
