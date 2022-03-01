@@ -1,0 +1,60 @@
+#### Data Processs ####
+
+import nltk
+import pandas as pd
+import gensim
+import numpy as np
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from gensim.corpora import Dictionary
+import os
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pylab import savefig
+
+# Read file
+# Working directory may be different
+os.chdir("D:/2021 Purdue MSBAIM/Course/MGMT 59000 Analyzing Unstructured Data/Group Project")
+rev=pd.read_csv('lawl.csv', header=None, encoding = "UTF-8")
+
+df_temp = rev.iloc[:,  0:2]
+t1=df_temp.values.tolist()
+
+# Data partition: 7/3
+training_docs = t1[:697]
+testing_docs = t1[697:997]
+
+# Separate X and Label
+training_x = [i[1] for i in training_docs]
+training_x.remove(training_x[194])
+testing_x = [i[1] for i in testing_docs]
+training_c = [i[0] for i in training_docs]
+training_c.remove(training_c[194])
+testing_c = [i[0] for i in testing_docs]
+
+# Transform those reviews into a TFIDF matrix
+t2=[]
+for i in training_x:
+    token_d1 = nltk.word_tokenize(i)
+    token_d4 = [token for token in token_d1 if not token in stopwords.words('english') if token.isalpha()]
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    token_d2 = [lemmatizer.lemmatize(token).lower() for token in token_d4 if token.isalpha()]
+    t2.append(token_d2)
+
+t3=[]
+for i in testing_x:
+    token_d1 = nltk.word_tokenize(i)
+    token_d4 = [token for token in token_d1 if not token in stopwords.words('english') if token.isalpha()]
+    lemmatizer = nltk.stem.WordNetLemmatizer()
+    token_d2 = [lemmatizer.lemmatize(token).lower() for token in token_d4 if token.isalpha()]
+    t3.append(token_d2)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Trick: create a dummy tokenizer
+def tk(doc):
+    return doc
+vec = TfidfVectorizer(analyzer='word',tokenizer=tk, preprocessor=tk,token_pattern=None, min_df=5, ngram_range=(1,2), stop_words='english')
+vec.fit(t2)
+training_x = vec.transform(t2)
+testing_x = vec.transform(t3)
