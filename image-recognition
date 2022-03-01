@@ -36,3 +36,4 @@ image = preprocess_input(image)
 yhat = model.predict(image)
 label = decode_predictions(yhat)
 print(label)
+
