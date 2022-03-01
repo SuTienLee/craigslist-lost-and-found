@@ -1,0 +1,38 @@
+#### Image Recognization ####
+
+##Image VGG
+from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import decode_predictions
+from keras.applications.vgg16 import VGG16
+from PIL import Image #after pillow is installed
+from pylab import *
+import tensorflow
+import os
+
+os.chdir("D:/2021 Purdue MSBAIM/Course/MGMT 59000 Analyzing Unstructured Data/Group Project")
+model = VGG16()
+# prepare image
+im = array(Image.open('puppy.jpg').resize((224,224)))
+image = im.reshape((1, im.shape[0], im.shape[1], im.shape[2]))
+image = preprocess_input(image)
+#predict
+yhat = model.predict(image)
+label = decode_predictions(yhat)
+print(label)
+
+###Image VGG
+from keras.applications.vgg16 import preprocess_input
+from keras.applications.vgg16 import decode_predictions
+from keras.applications.vgg16 import VGG16
+from PIL import Image #after pillow is installed
+from pylab import *
+model = VGG16()
+
+# prepare image
+im = array(Image.open('cat.jpg').resize((224,224)))
+image = im.reshape((1, im.shape[0], im.shape[1], im.shape[2]))
+image = preprocess_input(image)
+# predict
+yhat = model.predict(image)
+label = decode_predictions(yhat)
+print(label)
